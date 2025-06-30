@@ -3,9 +3,11 @@ import { HashRouter as Router, Route, Routes, useNavigate } from 'react-router-d
 import reactLogo from './assets/react.svg';
 
 const MOCK_MARKETS = [
-  { name: "Agro Market A", distance: "5 km" },
-  { name: "Green Valley Market", distance: "12 km" },
-  { name: "Farmers' Hub", distance: "20 km" },
+  { name: "Agro Market A", distance: "5 km", category: "Vegetables", link: "#" },
+  { name: "Green Valley Market", distance: "12 km", category: "Grains", link: "#" },
+  { name: "Farmers' Hub", distance: "20 km", category: "Fruits", link: "#" },
+  { name: "City Mandi", distance: "8 km", category: "Vegetables", link: "#" },
+  { name: "Village Bazaar", distance: "15 km", category: "Grains", link: "#" },
 ];
 const MOCK_PRICES: { [key: string]: { min: number; max: number; period: string } } = {
   wheat: { min: 1800, max: 2200, period: "March - April" },
@@ -1035,6 +1037,22 @@ const App: React.FC = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [showNearbyMarketplace, setShowNearbyMarketplace] = useState(false);
+  const [marketSearch, setMarketSearch] = useState("");
+  const [marketCategory, setMarketCategory] = useState("All");
+
+  const MOCK_MARKETS = [
+    { name: "Agro Market A", distance: "5 km", category: "Vegetables", link: "#" },
+    { name: "Green Valley Market", distance: "12 km", category: "Grains", link: "#" },
+    { name: "Farmers' Hub", distance: "20 km", category: "Fruits", link: "#" },
+    { name: "City Mandi", distance: "8 km", category: "Vegetables", link: "#" },
+    { name: "Village Bazaar", distance: "15 km", category: "Grains", link: "#" },
+  ];
+  const marketCategories = ["All", ...Array.from(new Set(MOCK_MARKETS.map(m => m.category)))];
+  const filteredMarkets = MOCK_MARKETS.filter(m =>
+    (marketCategory === "All" || m.category === marketCategory) &&
+    m.name.toLowerCase().includes(marketSearch.toLowerCase())
+  );
 
   // Debug state changes
   useEffect(() => {
@@ -1354,6 +1372,7 @@ const App: React.FC = () => {
     { name: "Irrigation Advice", icon: "💧", description: "Smart irrigation recommendations for optimal water usage and crop health" },
     { name: "Equipment Guide", icon: "🚜", description: "Comprehensive guide to farming equipment, prices, and maintenance" },
     { name: "Cost Analysis", icon: "💰", description: "Detailed cost breakdown and financial analysis for different crops" },
+    { name: "Nearby Marketplace / Mandi", icon: "🛒", description: "Find the nearest markets and mandis for your crops, including distance and details." },
     { name: "Government Schemes", icon: "🏛️", description: "Information about government subsidies and support programs" },
     { name: "Harvest Planning", icon: "🌾", description: "Optimal harvest timing, storage, and post-harvest management strategies" },
     { name: "Weather Updates", icon: "🌤️", description: "Real-time weather data, forecasts, and farming-specific weather alerts" }
@@ -1537,6 +1556,9 @@ const App: React.FC = () => {
                       break;
                     case "Cost Analysis":
                       setShowCostAnalysis(true);
+                      break;
+                    case "Nearby Marketplace / Mandi":
+                      setShowNearbyMarketplace(true);
                       break;
                     case "Government Schemes":
                       setShowGovernmentSchemes(true);
@@ -3842,6 +3864,66 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {showNearbyMarketplace && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.6)",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: 24,
+            width: "90vw",
+            maxWidth: 900,
+            maxHeight: "90vh",
+            overflow: "auto",
+            padding: 32,
+            position: "relative",
+            display: "flex",
+            flexDirection: "column"
+          }}>
+            <button onClick={() => setShowNearbyMarketplace(false)} style={{ position: "absolute", top: 16, right: 16, background: "#eee", border: "none", borderRadius: 8, width: 36, height: 36, fontSize: 22, cursor: "pointer" }}>×</button>
+            <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Nearby Marketplace / Mandi</h2>
+            <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+              <input
+                type="text"
+                placeholder="Search markets..."
+                value={marketSearch}
+                onChange={e => setMarketSearch(e.target.value)}
+                style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", fontSize: 16 }}
+              />
+              <select
+                value={marketCategory}
+                onChange={e => setMarketCategory(e.target.value)}
+                style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc", fontSize: 16 }}
+              >
+                {marketCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
+              {filteredMarkets.map((market, idx) => (
+                <div key={idx} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, background: "#f9fafb", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontWeight: 700, fontSize: 20 }}>{market.name}</div>
+                  <div style={{ color: "#16a34a", fontWeight: 600 }}>{market.distance}</div>
+                  <div style={{ color: "#64748b" }}>Category: {market.category}</div>
+                  <a href={market.link} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", marginTop: 8, textDecoration: "underline", fontWeight: 500 }}>View Details</a>
+                </div>
+              ))}
+              {filteredMarkets.length === 0 && <div style={{ gridColumn: "1/-1", textAlign: "center", color: "#64748b" }}>No markets found.</div>}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes slideIn {
